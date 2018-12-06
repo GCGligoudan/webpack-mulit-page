@@ -2,6 +2,7 @@ const path = require('path')
 const glob = require('glob')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 // var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 
 function getEntry() {
@@ -20,7 +21,7 @@ function getEntry() {
 function addEntry() {
   let entryObj = {}
   getEntry().forEach(item => {
-    entryObj[item] = path.resolve(__dirname,'src', item, 'main.js')
+    entryObj[item] = path.resolve(__dirname, 'src', item, 'main.js')
   })
   return entryObj
 }
@@ -37,28 +38,31 @@ const webpackconfig = {
         use: ['style-loader', 'css-loader']
       },
       {
-        test: /\.(png|gif|jpe?g|svg)$/i,
-        use: {
-          loader: 'file-loader',
-          options: {
-            name: '[name].[ext]',
-            outputPath: 'images/'
-          }
-        }
+        test: /\.(png|gif|jpe?g|svg)$/,
+        use: ['file-loader']
       },
       {
-        test: /\.html$/,
+        test: /\.(html)$/,
         use: {
           loader: 'html-loader',
           options: {
-            minimize: true
+            attrs: [':img']
           }
         }
-      },
+      }
     ]
   },
   plugins: [
     new CleanWebpackPlugin(['dist']),
+    new CopyWebpackPlugin([{
+      from: './src/**/img/*',
+      to: './img',
+      flatten: true
+    }]),
+    new CopyWebpackPlugin([{
+      from: './src/**/*.css',
+      flatten: true
+    }]),
     // new HtmlWebpackPlugin({
     //   template: './src/popup-info-box-web-component/index.html',
     //   minify: {
@@ -76,15 +80,15 @@ const webpackconfig = {
     open: true
   },
   mode: 'development',
-} 
+}
 
 getEntry().forEach(pathname => {
   let conf = {
     filename: pathname.replace('src/', '') + '.html',
-    template: path.join(__dirname,'src',pathname, 'index.html'),
+    template: path.join(__dirname, 'src', pathname, 'index.html'),
     chunks: Array.call([], pathname)
   }
   webpackconfig.plugins.push(new HtmlWebpackPlugin(conf))
 })
 
-module.exports = webpackconfig 
+module.exports = webpackconfig
